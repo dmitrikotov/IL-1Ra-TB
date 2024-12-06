@@ -515,7 +515,7 @@ venn.diagram(x = list(rownames(naive.mono.sp140),rownames(naive.mono.nos2),rowna
              cat.cex = 0)
 
 #Define signatures for B6 infected versus naive
-super.integrated <- readRDS(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Irg1 and iNOS scRNAseq 220315/b6 sp140 irg1 inos v2")
+super.integrated <- readRDS(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Irg1 and iNOS scRNAseq 220315/b6 sp140 irg1 inos v2")
 super.integrated$infected <- ifelse(super.integrated$state == "Mtb+" | super.integrated$state == "Mtb-", "infected","naive")
 super.integrated$cell_type.infected <- paste(super.integrated$cell_type, super.integrated$infected, sep = "_")
 Idents(super.integrated) <- "cell_type.infected"
@@ -733,6 +733,7 @@ B6.Mtb.Pos.less.stringent
 #remove weirdo outliers
 cells.remove <- c("GATGATCTCCTAGCCT_4_3","GTCGTAACACTTGGCG_4_3","CACAGGCTCTGAGCAT_6_6","GTAGGTTGTGGATCAG_6_6","ATAGAGACAAGGCGTA_1_7")
 super.infected.IM_filtered <- super.infected.IM[,!colnames(super.infected.IM) %in% cells.remove]
+super.infected.IM_filtered <- RenameIdents(super.infected.IM_filtered, 'ISG IM' = "Spp1+ IM", 'Activated IM' = "Trem2+ IM", 'CD16-2 Mono' = "CD16.2 Mono")
 Idents(super.infected.IM_filtered) <- "celltype"
 DimPlot(super.infected.IM_filtered, split.by = "cell_type")
 DimPlot(super.infected.IM_filtered, split.by = "state")
@@ -796,6 +797,15 @@ Idents(super.integrated) <- "state"
 super.naive <- subset(super.integrated, idents = "naive")
 Idents(super.naive) <- "mouse_ifn_sig"
 DimPlot(super.naive, cols = c("grey","purple","red","blue"), order = c("ifnb","ifng","both","neither"))
+
+#Updated version
+levels(super.naive) <- c("neither","both","ifng","ifnb")
+DimPlot(super.naive, cols = c("grey","chartreuse3","red","blue"))
+Idents(super.integrated) <- "state"
+super.mtb <- subset(super.integrated, idents = "Mtb+")
+Idents(super.mtb) <- "mouse_ifn_sig"
+levels(super.mtb) <- c("neither","both","ifng","ifnb")
+DimPlot(super.mtb, split.by = "cell_type",cols = c("grey","chartreuse3","red","blue"))
 
 #The problem is that not every group has every cell type. Mono, IM, Neutrophil are in every sample. DC and AM are in 5 out of 6 samples (not sample 2).
 Idents(super.mtb) <- "celltype"
@@ -899,3 +909,137 @@ write.csv(im.total, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Codi
 #Plot Il1rn and IL1r2 levels by state and genotype
 levels(super.integrated) <- c("B6_naive","B6_Mtb-","B6_Mtb+","Sp140_naive","Sp140_Mtb-","Sp140_Mtb+","Irg1_naive","Irg1_Mtb-","Irg1_Mtb+","iNOS_naive","iNOS_Mtb-","iNOS_Mtb+")
 VlnPlot(super.integrated, features = c("Il1r2","Il1rn"))
+
+#Identify properties of Spp1+ IMs for each of the genotypes and find what is conserved. Do certain genotypes Spp1+ IMs better mimic human SPP1+ IMs?
+super.infected.IM_filtered[["cell_type.celltype"]] <- paste(super.infected.IM_filtered$cell_type, super.infected.IM_filtered$celltype, sep = "_")
+Idents(super.infected.IM_filtered) <- "cell_type.celltype"
+#compared to IM
+Spp1.Sp140 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Sp140_ISG IM", ident.2 = "Sp140_IM")
+Spp1.Irg1 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Irg1_ISG IM", ident.2 = "Irg1_IM")
+Spp1.iNOS <- FindMarkers(super.infected.IM_filtered, ident.1 = "iNOS_ISG IM", ident.2 = "iNOS_IM")
+Spp1.human <- FindMarkers(myeloid, ident.1 = "SPP1 IM", ident.2 = "IM")
+
+#compared to monocytes
+Spp1.Sp140 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Sp140_ISG IM", ident.2 = "Sp140_Mono")
+Spp1.Irg1 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Irg1_ISG IM", ident.2 = "Irg1_Mono")
+Spp1.iNOS <- FindMarkers(super.infected.IM_filtered, ident.1 = "iNOS_ISG IM", ident.2 = "iNOS_Mono")
+Spp1.human <- FindMarkers(myeloid, ident.1 = "SPP1 IM", ident.2 = "monocytes")
+
+#compared to TREM2+ IM
+Spp1.Sp140 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Sp140_ISG IM", ident.2 = "Sp140_Activated IM")
+Spp1.Irg1 <- FindMarkers(super.infected.IM_filtered, ident.1 = "Irg1_ISG IM", ident.2 = "Irg1_Activated IM")
+Spp1.iNOS <- FindMarkers(super.infected.IM_filtered, ident.1 = "iNOS_ISG IM", ident.2 = "iNOS_Activated IM")
+Spp1.human <- FindMarkers(human.tb, ident.1 = "SPP1 IM", ident.2 = "TREM2 IM")
+Spp1.Sp140.plot <- EnhancedVolcano(Spp1.Sp140,
+                lab = rownames(Spp1.Sp140),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                title = "Spp1+ IM vs TREM2+ IM in Sp140 KO mice",
+                subtitle = "",
+                drawConnectors = T,
+                arrowheads = F,
+                raster = T,
+                pCutoff = 0.05)
+Spp1.Irg1.plot <- EnhancedVolcano(Spp1.Irg1,
+                                   lab = rownames(Spp1.Irg1),
+                                   x = 'avg_log2FC',
+                                   y = 'p_val_adj',
+                                   title = "Spp1+ IM vs TREM2+ IM in Irg1 KO mice",
+                                   subtitle = "",
+                                   drawConnectors = T,
+                                   arrowheads = F,
+                                   raster = T,
+                                   pCutoff = 0.05)
+Spp1.iNOS.plot <- EnhancedVolcano(Spp1.iNOS,
+                                  lab = rownames(Spp1.iNOS),
+                                  x = 'avg_log2FC',
+                                  y = 'p_val_adj',
+                                  title = "Spp1+ IM vs TREM2+ IM in iNOS KO mice",
+                                  subtitle = "",
+                                  drawConnectors = T,
+                                  arrowheads = F,
+                                  raster = T,
+                                  pCutoff = 0.05)
+Spp1.human.plot <- EnhancedVolcano(Spp1.human,
+                                  lab = rownames(Spp1.human),
+                                  x = 'avg_log2FC',
+                                  y = 'p_val_adj',
+                                  title = "Spp1+ IM vs TREM2+ IM in humans",
+                                  subtitle = "",
+                                  drawConnectors = T,
+                                  arrowheads = F,
+                                  raster = T)
+
+#Find the unique and conserved unique genes expressed by SPP1+ IMs
+Spp1.Sp140.filt <- Spp1.Sp140 %>% filter(p_val_adj < 0.05 & avg_log2FC > 1) #72 genes
+Spp1.Irg1.filt <- Spp1.Irg1 %>% filter(p_val_adj < 0.05 & avg_log2FC > 1) #107 genes
+Spp1.iNOS.filt <- Spp1.iNOS %>% filter(p_val_adj < 0.05 & avg_log2FC > 1) #70 genes
+Sp140.Irg1.overlap <- intersect(row.names(Spp1.Sp140.filt),row.names(Spp1.Irg1.filt)) #27 genes
+Sp140.iNOS.overlap <- intersect(row.names(Spp1.Sp140.filt),row.names(Spp1.iNOS.filt)) #16 genes
+Irg1.iNOS.overlap <- intersect(row.names(Spp1.Irg1.filt),row.names(Spp1.iNOS.filt)) #47 genes
+triple.overlap <- intersect(Sp140.iNOS.overlap, Irg1.iNOS.overlap) #16 genes
+
+Spp1.human.filt <- Spp1.human %>% filter(p_val_adj < 0.05 & avg_log2FC > 1) #1344 genes
+Spp1.human.genes <-convert_human_to_mouse_symbols(row.names(Spp1.human.filt)) %>% na.omit() #1166 genes
+
+Sp140.human.overlap <- intersect(row.names(Spp1.Sp140.filt),Spp1.human.genes) #19 genes
+Irg1.human.overlap <- intersect(row.names(Spp1.Irg1.filt),Spp1.human.genes) #24 genes
+iNOS.human.overlap <- intersect(row.names(Spp1.iNOS.filt),Spp1.human.genes) #14 genes
+Sp140.Irg1.human.overlap <- intersect(Sp140.Irg1.overlap,Spp1.human.genes) #10 genes
+iNOS.Irg1.human.overlap <- intersect(Irg1.iNOS.overlap,Spp1.human.genes) #10 genes
+quad.overlap <- intersect(triple.overlap,Spp1.human.genes) #6 genes
+
+#Genes conserved among TREM2+ IMs
+Trem2.Sp140.filt <- Spp1.Sp140 %>% filter(p_val_adj < 0.05 & avg_log2FC < -1) #409
+Trem2.Irg1.filt <- Spp1.Irg1 %>% filter(p_val_adj < 0.05 & avg_log2FC < -1) #491 genes
+Trem2.iNOS.filt <- Spp1.iNOS %>% filter(p_val_adj < 0.05 & avg_log2FC < -1) #372 genes
+Trem2.Sp140.Irg1.overlap <- intersect(row.names(Trem2.Sp140.filt),row.names(Trem2.Irg1.filt)) #121 genes
+Trem2.Sp140.iNOS.overlap <- intersect(row.names(Trem2.Sp140.filt),row.names(Trem2.iNOS.filt)) #94 genes
+Trem2.Irg1.iNOS.overlap <- intersect(row.names(Trem2.Irg1.filt),row.names(Trem2.iNOS.filt)) #218 genes
+Trem2.triple.overlap <- intersect(Trem2.Sp140.iNOS.overlap, Trem2.Irg1.iNOS.overlap) #78 genes
+
+#Focus on monocytes and monocyte-derived macrophages
+Idents(super.integrated) <- "celltype"
+super.IM <- subset(super.integrated, idents = c("Activated IM","ISG IM","IM","Mono","CD16-2 Mono"))
+DimPlot(super.IM)
+
+#remove weirdo outliers
+CellSelector(DimPlot(super.IM))
+cells.remove <- c("GATGATCTCCTAGCCT_4_3","GTCGTAACACTTGGCG_4_3","GTCACGGGTGTGCTTA_5_5","CACAGGCTCTGAGCAT_6_6","GTAGGTTGTGGATCAG_6_6","ATAGAGACAAGGCGTA_1_7")
+super.IM_filtered <- super.IM[,!colnames(super.IM) %in% cells.remove]
+super.IM_filtered <- RenameIdents(super.IM_filtered, 'ISG IM' = "Spp1+ IM", 'Activated IM' = "Trem2+ IM", 'CD16-2 Mono' = "CD16.2 Mono")
+Idents(super.IM_filtered) <- "celltype"
+DimPlot(super.IM_filtered, split.by = "cell_type")
+DimPlot(super.IM_filtered, split.by = "state")
+
+#Mono Macs
+Idents(super.integrated) <- "celltype"
+mono.mac <- subset(super.integrated, idents = c("Activated IM","ISG IM","IM","Mono","CD16-2 Mono","AM"))
+DimPlot(mono.mac)
+cells.remove <- c("GATGATCTCCTAGCCT_4_3","GTCGTAACACTTGGCG_4_3","GTCACGGGTGTGCTTA_5_5","CACAGGCTCTGAGCAT_6_6","GTAGGTTGTGGATCAG_6_6","ATAGAGACAAGGCGTA_1_7")
+mono.mac_filtered <- mono.mac[,!colnames(mono.mac) %in% cells.remove]
+mono.mac_filtered <- RenameIdents(mono.mac_filtered, 'ISG IM' = "Spp1+ IM", 'Activated IM' = "Trem2+ IM", 'CD16-2 Mono' = "CD16.2 Mono")
+Idents(mono.mac_filtered) <- "celltype"
+DimPlot(mono.mac_filtered, split.by = "cell_type")
+DimPlot(mono.mac_filtered, split.by = "state")
+Idents(mono.mac_filtered) <- "state"
+mono.mac.inf <- subset(mono.mac_filtered, idents = c("Mtb+","Mtb-"))
+Idents(mono.mac.inf) <- "celltype"
+mono.mac.inf <- RenameIdents(mono.mac.inf, 'ISG IM' = "Spp1+ IM", 'Activated IM' = "Trem2+ IM", 'CD16-2 Mono' = "CD16.2 Mono")
+DimPlot(mono.mac.inf)
+mono.mac.inf$celltype <- Idents(mono.mac.inf)
+
+#Slightly simplified analysis of Il1rn expression by genotype
+somewhat.simple <- super.integrated
+Idents(somewhat.simple) <- "celltype"
+somewhat.simple <- RenameIdents(somewhat.simple, 'ISG Mature Neut' = "Neutrophil", 'ISG Activated Neut' = "Neutrophil", 'Aged Neut' = "Neutrophil", 'Mature Neut' = "Neutrophil",
+                                  'ISG Old Neut' = "Neutrophil", 'ISG Young Neut' = "Neutrophil", 'CD63 Neut' = "Neutrophil", 'Mmp8 Neut' = "Neutrophil",'Nos2 Neut' = "Neutrophil",
+                                  'Camp Mmp8 Neut' = "Neutrophil", 'Activated AM' = "AM")
+super.somewhat.simple <- subset(somewhat.simple, idents = c("Neutrophil","Mono","IM", "ISG IM", "Activated IM","AM","DC"))
+super.somewhat.simple$celltype <- Idents(super.somewhat.simple)
+Idents(super.somewhat.simple) <- "infected"
+mtb.somewhat <- subset(super.somewhat.simple, idents = "infected")
+Idents(mtb.somewhat) <- "celltype"
+DimPlot(mtb.somewhat)
+mtb.somewhat$celltype <- factor(mtb.somewhat$celltype, levels = c("AM","Mono","IM","Activated IM","ISG IM","Neutrophil"))
+VlnPlot(mtb.somewhat, features = "Il1rn", split.by = "cell_type", idents = c("AM","Mono","IM","Activated IM","ISG IM","Neutrophil"), group.by = "celltype")
