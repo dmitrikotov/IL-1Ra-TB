@@ -146,6 +146,8 @@ p_ligand_aupr_Activated <- p_ligand_aupr
 
 p_ligand_aupr_Activated
 
+saveRDS(p_ligand_aupr_Activated, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Irg1 and iNOS scRNAseq 220315/p_ligand_aupr_Activated")
+
 
 #Redo the analysis as above but comparing Spp1+ IM to IM
 
@@ -218,6 +220,8 @@ vis_ligand_receptor_network = lr_network_top_matrix[order_receptors, order_ligan
 p_ligand_receptor_network = vis_ligand_receptor_network %>% t() %>% make_heatmap_ggplot("IL-1 Regulated Ligands","Receptors expressed by IMs", color = "mediumvioletred", x_axis_position = "top",legend_title = "Prior interaction potential")
 p_ligand_receptor_network
 
+saveRDS(p_ligand_receptor_network, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Irg1 and iNOS scRNAseq 220315/p_ligand_receptor_network")
+
 #Show Ligand Activity - SPP1 IM
 ligand_aupr_matrix = ligand_activities %>% select(aupr_corrected) %>% as.matrix() %>% magrittr::set_rownames(ligand_activities$test_ligand)
 ligand_aupr_matrix = ligand_activities_activated %>% select(aupr_corrected) %>% as.matrix() %>% magrittr::set_rownames(ligand_activities$test_ligand)
@@ -230,3 +234,6 @@ p_ligand_aupr = vis_ligand_aupr %>% make_heatmap_ggplot("IL-1 Regulated Ligands"
 p_ligand_aupr_ISG <- p_ligand_aupr
 
 p_ligand_aupr_ISG
+
+saveRDS(p_ligand_aupr_ISG, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Irg1 and iNOS scRNAseq 220315/p_ligand_aupr_ISG")
+
