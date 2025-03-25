@@ -57,3 +57,7 @@ plot(b6.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 plot(sp140.roc, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
 plot(irg1.roc,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
 plot(inos.roc, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
+
+#Save the files
+saveRDS(counts.GSE42834, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB vs Other Diseases Gene Sig/counts_GSE42834")
+saveRDS(meta.42834, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB vs Other Diseases Gene Sig/meta_GSE42834")
