@@ -70,6 +70,8 @@ res
 ACS.counts.norm <- counts(dds, normalized = T)
 ACS.counts.norm <- as.data.frame(ACS.counts.norm)
 
+saveRDS(dds, file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/ACS Cohort/ACS_progressors')
+
 IL1RN.progressors <- plotCounts(dds, gene="IL1RN", intgroup="TimeToTB", returnData=T)
 IL1RN.progressors <- IL1RN.progressors %>% filter(TimeToTB != "-")
 IL1RN.progressors$TimeToTB <- as.numeric(IL1RN.progressors$TimeToTB)
