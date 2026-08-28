@@ -1,4 +1,5 @@
 library(tidyverse)
+library(Seurat)
 library(caret)
 library(hacksig)
 library(pROC)
@@ -54,9 +55,9 @@ cat("Candidate scRNA-seq DEGs passed filter:", length(filtered_nos2), "\n")
 # 2. Feature Selection & Model Training with caret
 # ==============================================================================
 # Load primary dataset for model training (Samples in rows, Genes + 'class' in columns)
-tb.counts.norm <- readRDS(tb.counts.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/tb_counts_norm")
+tb.counts.norm <- readRDS(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/tb_counts_norm")
 
-TB.infected <- readRDS(TB.infected, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB_infected")
+TB.infected <- readRDS(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB_infected")
 
 tb.counts.norm_transposed <- tb.counts.norm %>%
   # 1. Convert existing rownames into an explicit column
@@ -71,16 +72,16 @@ tb.counts.norm_transposed <- tb.counts.norm %>%
 tb.counts.norm_transposed <- column_to_rownames(tb.counts.norm_transposed, var = "variable")
 
 # Independent test expression dataset (Genes in rows, Samples in columns)
-berry_southafrica_tb <- readRDS(berry.southafrica.tb, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_tb")
-berry_southafrica_norm <-readRDS(berry.southafrica.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_norm")
+berry_southafrica_tb <- readRDS(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_tb")
+berry_southafrica_norm <-readRDS(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_norm')
 
 berry_meta <- data.frame("sample_id" = colnames(berry_southafrica_norm))
 berry_meta <- berry_meta %>% mutate(label = if_else(sample_id %in% berry_southafrica_tb, "TB", "Control"))
 
 #Identify genes shared between training and test dataset
-common_genes <- intersect(row.names(berry.southafrica.norm), colnames(tb.counts.norm_transposed))
+common_genes <- intersect(row.names(berry_southafrica_norm), colnames(tb.counts.norm_transposed))
 tb.counts.norm_transposed <- tb.counts.norm_transposed[, common_genes]
-berry.southafrica.norm <- berry.southafrica.norm[common_genes,]
+berry_southafrica_norm <- berry_southafrica_norm[common_genes,]
 
 # Add the new column based on vector matching
 tb.counts.norm_transposed <- tb.counts.norm_transposed %>%
@@ -280,32 +281,40 @@ cat(sprintf("Nos2 caret ML Classifier AUC: %.3f (95%% CI: %.3f - %.3f)\n",
 #overview
 cat("B6 Candidate scRNA-seq DEGs passed filter:", length(filtered_b6), "\n")
 cat("B6 Selected signature genes:", paste(selected_genes_b6, collapse = ", "), "\n")
-cat(sprintf("B6 hacksig Signature Score AUC: %.3f (95%% CI: %.3f - %.3f)\n",
-            auc_hacksig_b6, ci_hacksig_b6[1], ci_hacksig_b6[3]))
 cat(sprintf("B6 caret ML Classifier AUC: %.3f (95%% CI: %.3f - %.3f)\n",
             auc_ml_b6, ci_ml_b6[1], ci_ml_b6[3]))
 
 cat("Sp140 Candidate scRNA-seq DEGs passed filter:", length(filtered_sp140), "\n")
 cat("Sp140 Selected signature genes:", paste(selected_genes_sp140, collapse = ", "), "\n")
-cat(sprintf("Sp140 hacksig Signature Score AUC: %.3f (95%% CI: %.3f - %.3f)\n",
-            auc_hacksig_sp140, ci_hacksig_sp140[1], ci_hacksig_sp140[3]))
 cat(sprintf("Sp140 caret ML Classifier AUC: %.3f (95%% CI: %.3f - %.3f)\n",
             auc_ml_sp140, ci_ml_sp140[1], ci_ml_sp140[3]))
 
 cat("Irg1 Candidate scRNA-seq DEGs passed filter:", length(filtered_irg1), "\n")
 cat("Irg1 Selected signature genes:", paste(selected_genes_irg1, collapse = ", "), "\n")
-cat(sprintf("Irg1 hacksig Signature Score AUC: %.3f (95%% CI: %.3f - %.3f)\n",
-            auc_hacksig_irg1, ci_hacksig_irg1[1], ci_hacksig_irg1[3]))
 cat(sprintf("Irg1 caret ML Classifier AUC: %.3f (95%% CI: %.3f - %.3f)\n",
             auc_ml_irg1, ci_ml_irg1[1], ci_ml_irg1[3]))
 
 cat("Nos2 Candidate scRNA-seq DEGs passed filter:", length(filtered_nos2), "\n")
 cat("Nos2 Selected signature genes:", paste(selected_genes_nos2, collapse = ", "), "\n")
-cat(sprintf("Nos2 hacksig Signature Score AUC: %.3f (95%% CI: %.3f - %.3f)\n",
-            auc_hacksig_nos2, ci_hacksig_nos2[1], ci_hacksig_nos2[3]))
 cat(sprintf("Nos2 caret ML Classifier AUC: %.3f (95%% CI: %.3f - %.3f)\n",
             auc_ml_nos2, ci_ml_nos2[1], ci_ml_nos2[3]))
 
+#Genes used in final model:
+model_genes_b6 <- predictors(final_model_b6)
+cat("B6 Final model gene count:", length(model_genes_b6), "\n")
+print(model_genes_b6)
+
+model_genes_sp140 <- predictors(final_model_sp140)
+cat("Sp140 Final model gene count:", length(model_genes_sp140), "\n")
+print(model_genes_sp140)
+
+model_genes_irg1 <- predictors(final_model_irg1)
+cat("Irg1 Final model gene count:", length(model_genes_irg1), "\n")
+print(model_genes_irg1)
+
+model_genes_nos2 <- predictors(final_model_nos2)
+cat("Nos2 Final model gene count:", length(model_genes_nos2), "\n")
+print(model_genes_nos2)
 
 # Plot comparative ROC curves
 plot(roc_hacksig_b6, col = "darkblue", main = "Independent Test Dataset - ROC Curves")
