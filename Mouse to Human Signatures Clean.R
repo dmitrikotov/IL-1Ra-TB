@@ -82,11 +82,12 @@ row.names(tb.counts.norm) <- tb.counts.norm$gene
 TB.infected <- row.names(human.tb.db.meta[human.tb.db.meta$TB.status == "TB",])
 Uninfected <- row.names(human.tb.db.meta[human.tb.db.meta$TB.status == "Uninfected",])
 
-saveRDS(TB.infected, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Human TB Gene Signatures/TB")
+saveRDS(TB.infected, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB_infected")
+saveRDS(Uninfected, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Uninfected")
 
 #gene symbol = row names and sample IDs = column names
 tb.counts.norm <- tb.counts.norm[,1:249]
-saveRDS(tb.counts.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Human TB Gene Signatures/tb.counts.norm")
+saveRDS(tb.counts.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/tb_counts_norm")
 
 #Score Immunosuppressive genes
 immunosuppresion <- list(c("IL1RN","IL18BP","CD274","TGFB1","IDO1","IL10","ARG1"))

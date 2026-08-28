@@ -4,12 +4,13 @@ library(pROC)
 library(readxl)
 
 #Read in mouse signatures
-B6.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/DK Postdoc Data/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/B6.csv')
-Sp140.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/DK Postdoc Data/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Sp140.csv')
-iNOS.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/DK Postdoc Data/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/iNOS.csv')
-Irg1.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/DK Postdoc Data/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Irg1.csv')
+B6.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/B6.csv')
+Sp140.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Sp140.csv')
+iNOS.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/iNOS.csv')
+Irg1.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Irg1.csv')
 
-#Analysis of GSE42834 starting with the processed data available from GEO with per gene signal averaged when there are multiple probes for a given gene - 
+
+#Analysis of GSE42834 starting with the processed data available from GEO with per gene signal averaged when there are multiple probes for a given gene -
 GSE42834 <- read_xlsx("/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri_Kotov/GSE42834_cleanedmatrix.xlsx",col_names = F)
 #Filter down to the whole sample dataset - this strips out the cell separation dataset
 counts.GSE42834 <- GSE42834[c(3,4,111:391)]
@@ -40,23 +41,33 @@ human.disease.42834$status <- ifelse(grepl(paste(row.names(filter(meta.42834, di
                                                            ifelse(grepl(paste(row.names(filter(meta.42834, disease_state == "Pneumonia_Pre-treatment")), collapse = "|"), human.disease.42834$sample_id), "Pneumonia",
                                                                   ifelse(grepl(paste(row.names(filter(meta.42834, disease_state == "Control")), collapse = "|"), human.disease.42834$sample_id), "Control","Other"))))))
 
-b6.roc <- roc(human.disease.42834$status, human.disease.42834$sig1, levels = c("TB","Pneumonia"))
-sp140.roc <- roc(human.disease.42834$status, human.disease.42834$sig2, levels = c("TB","Pneumonia"))
-irg1.roc <- roc(human.disease.42834$status, human.disease.42834$sig3, levels = c("TB","Pneumonia"))
-inos.roc <- roc(human.disease.42834$status, human.disease.42834$sig4, levels = c("TB","Pneumonia"))
+b6.roc <- roc(human.disease.42834$status, human.disease.42834$sig1, levels = c("TB","Pneumonia"), ci = TRUE)
+sp140.roc <- roc(human.disease.42834$status, human.disease.42834$sig2, levels = c("TB","Pneumonia"), ci = TRUE)
+irg1.roc <- roc(human.disease.42834$status, human.disease.42834$sig3, levels = c("TB","Pneumonia"), ci = TRUE)
+inos.roc <- roc(human.disease.42834$status, human.disease.42834$sig4, levels = c("TB","Pneumonia"), ci = TRUE)
 plot(b6.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 plot(sp140.roc, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
 plot(irg1.roc,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
 plot(inos.roc, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
 
-b6.roc <- roc(human.disease.42834$status, human.disease.42834$sig1, levels = c("TB","Cancer"))
-sp140.roc <- roc(human.disease.42834$status, human.disease.42834$sig2, levels = c("TB","Cancer"))
-irg1.roc <- roc(human.disease.42834$status, human.disease.42834$sig3, levels = c("TB","Cancer"))
-inos.roc <- roc(human.disease.42834$status, human.disease.42834$sig4, levels = c("TB","Cancer"))
+#roc.test - DeLong's test
+roc.test(sp140.roc, b6.roc) # p-value = 0.3386
+roc.test(irg1.roc, b6.roc) # p-value = 0.2994
+roc.test(inos.roc, b6.roc) # p-value = 0.1073
+
+b6.roc <- roc(human.disease.42834$status, human.disease.42834$sig1, levels = c("TB","Cancer"), ci = TRUE)
+sp140.roc <- roc(human.disease.42834$status, human.disease.42834$sig2, levels = c("TB","Cancer"), ci = TRUE)
+irg1.roc <- roc(human.disease.42834$status, human.disease.42834$sig3, levels = c("TB","Cancer"), ci = TRUE)
+inos.roc <- roc(human.disease.42834$status, human.disease.42834$sig4, levels = c("TB","Cancer"), ci = TRUE)
 plot(b6.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 plot(sp140.roc, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
 plot(irg1.roc,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
 plot(inos.roc, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
+
+#roc.test - DeLong's test
+roc.test(sp140.roc, b6.roc) # p-value = 0.9129
+roc.test(irg1.roc, b6.roc) # p-value = 0.3568
+roc.test(inos.roc, b6.roc) # p-value = 0.8666
 
 #Save the files
 saveRDS(counts.GSE42834, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/TB vs Other Diseases Gene Sig/counts_GSE42834")

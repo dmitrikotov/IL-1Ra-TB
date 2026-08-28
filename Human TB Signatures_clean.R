@@ -59,7 +59,7 @@ tb.counts.norm <- as.data.frame(tb.counts.norm)
 #Graph plots prettier just by entering ENSMUSG id
 graph <- function(x){
   d <- plotCounts(dds, gene= x, intgroup="TB.status", returnData=TRUE)
-  ggplot(d, aes(x = TB.status, y = count, color = TB.status)) + 
+  ggplot(d, aes(x = TB.status, y = count, color = TB.status)) +
     geom_boxplot(coef=0, outlier.shape = NA) +
     geom_jitter(size = 3, alpha = 0.9) +
     theme_bw() +
@@ -197,10 +197,10 @@ immunosuppresion.roc <- roc(immunosuppresion.scored$status, immunosuppresion.sco
 plot(immunosuppresion.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 
 #Apply mouse signatures to human dataset
-B6.strict <- read.csv(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Irg1 and iNOS scRNAseq 220315/B6 Strict Genes.csv") %>% filter(change == "up")
-Sp140.strict <- read.csv(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Irg1 and iNOS scRNAseq 220315/Sp140 Strict Genes.csv") %>% filter(change == "up")
-Irg1.strict <- read.csv(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Irg1 and iNOS scRNAseq 220315/Irg1 Strict Genes.csv") %>% filter(change == "up")
-iNOS.strict <- read.csv(file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Irg1 and iNOS scRNAseq 220315/iNOS Strict Genes.csv") %>% filter(change == "up")
+B6.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/B6.csv')
+Sp140.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Sp140.csv')
+iNOS.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/iNOS.csv')
+Irg1.strict <- read.csv(file = '/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/Mouse Gene Signatures/Irg1.csv')
 
 #Getting rid of duplicate human genes
 Sp140.strict <- filter(Sp140.strict, !(X %in% c("H2-Q6","Ifit3b")))
@@ -226,7 +226,7 @@ iNOS.strict <- rbind(iNOS.strict, filter(all.heatmap.genes, gene %in% setdiff(al
 iNOS.strict$genotype <- "iNOS"
 gene.sig.combined <- rbind(B6.strict,Sp140.strict,Irg1.strict,iNOS.strict) %>% arrange(gene)
 
-ggplot(gene.sig.combined, aes(genotype, gene, fill= avg_log2FC)) + 
+ggplot(gene.sig.combined, aes(genotype, gene, fill= avg_log2FC)) +
   geom_tile() +
   scale_fill_gradient2(low = "black")
 
@@ -234,14 +234,19 @@ ggplot(gene.sig.combined, aes(genotype, gene, fill= avg_log2FC)) +
 #ssgsea makes the point well but singscore is ever better!
 mouse.tb <- hack_sig(tb.counts.norm, signatures = c(list(B6.strict$gene),list(Sp140.strict$gene),list(Irg1.strict$gene),list(iNOS.strict$gene)), method = "singscore")
 mouse.tb$status <- ifelse(grepl(paste(TB.infected, collapse = "|"), mouse.tb$sample_id), "TB","Uninfected")
-b6.roc <- roc(mouse.tb$status, mouse.tb$sig1, levels = c("TB","Uninfected"))
-sp140.roc <- roc(mouse.tb$status, mouse.tb$sig2, levels = c("TB","Uninfected"))
-irg1.roc <- roc(mouse.tb$status, mouse.tb$sig3, levels = c("TB","Uninfected"))
-inos.roc <- roc(mouse.tb$status, mouse.tb$sig4, levels = c("TB","Uninfected"))
+b6.roc <- roc(mouse.tb$status, mouse.tb$sig1, levels = c("TB","Uninfected"), ci = T)
+sp140.roc <- roc(mouse.tb$status, mouse.tb$sig2, levels = c("TB","Uninfected"), ci = T)
+irg1.roc <- roc(mouse.tb$status, mouse.tb$sig3, levels = c("TB","Uninfected"), ci = T)
+inos.roc <- roc(mouse.tb$status, mouse.tb$sig4, levels = c("TB","Uninfected"), ci = T)
 plot(b6.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 plot(sp140.roc, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
 plot(irg1.roc,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
 plot(inos.roc, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
+
+#roc.test using Boostrap test
+roc.test(sp140.roc, b6.roc) #p-value = 1.451e-05
+roc.test(irg1.roc, b6.roc) #p-value = 3.31e-06
+roc.test(inos.roc, b6.roc) #p-value = 3.089e-06
 
 #Use the Berry South Africa dataset for the comparison
 berry.southafrica <- getGEO(GEO= "GSE107992")
@@ -249,7 +254,7 @@ berry.southafrica <- pData(berry.southafrica[[1]])
 row.names(berry.southafrica) <- berry.southafrica$title
 berry.southafrica <- berry.southafrica[2:43]
 colnames(berry.southafrica)[colnames(berry.southafrica) == 'group:ch1'] <- "disease.state"
-berry.southafrica.data <- read_excel("/Users/dmitrikotov/Library/CloudStorage/Box-Box/Coding stuff/Stromal Cell IL-1 scRNA-seq 7-22-21/GSE107992_Raw_counts_Berry_SouthAfrica.xlsx")
+berry.southafrica.data <- read_excel("/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Stromal Cell IL-1 scRNA-seq 7-22-21/GSE107992_Raw_counts_Berry_SouthAfrica.xlsx")
 berry.southafrica.data <- as.data.frame(berry.southafrica.data)
 row.names(berry.southafrica.data) <- berry.southafrica.data$Genes
 berry.southafrica.data <- berry.southafrica.data[4:50]
@@ -285,23 +290,28 @@ row.names(berry.southafrica.norm) <- berry.southafrica.norm$gene
 berry.southafrica.tb <- row.names(berry.southafrica[berry.southafrica$disease.state == "Active_TB",])
 berry.southafrica.ltbi <- row.names(berry.southafrica[berry.southafrica$disease.state == "LTBI",])
 
-saveRDS(berry.southafrica.tb, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Human TB Gene Signatures/berry.southafrica.tb")
+saveRDS(berry.southafrica.tb, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_tb")
 
 #Perform ROC analysis on Berry South Africa
 berry.southafrica.norm <- berry.southafrica.norm[,1:47]
 
-saveRDS(berry.southafrica.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Data/Coding stuff/Human TB Gene Signatures/berry.southafrica.norm")
+saveRDS(berry.southafrica.norm, file = "/Users/dmitrikotov/Library/CloudStorage/Box-Box/Dmitri Personal/DK Postdoc Data and Analysis/Coding stuff/Human TB Gene Signatures/berry_southafrica_norm")
 
 berry.southafrica.sig <- hack_sig(berry.southafrica.norm, signatures = c(list(B6.strict$gene),list(Sp140.strict$gene),list(Irg1.strict$gene),list(iNOS.strict$gene)), method = "singscore")
 berry.southafrica.sig$status <- ifelse(grepl(paste(berry.southafrica.tb, collapse = "|"), berry.southafrica.sig$sample_id), "TB", "LTBI")
-b6.berry.southafrica.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig1, levels = c("TB","LTBI"))
-sp140.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig2, levels = c("TB","LTBI"))
-irg1.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig3, levels = c("TB","LTBI"))
-inos.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig4, levels = c("TB","LTBI"))
+b6.berry.southafrica.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig1, levels = c("TB","LTBI"), ci = T)
+sp140.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig2, levels = c("TB","LTBI"), ci = T)
+irg1.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig3, levels = c("TB","LTBI"), ci = T)
+inos.berry.southafrica.tb.roc <- roc(berry.southafrica.sig$status, berry.southafrica.sig$sig4, levels = c("TB","LTBI"), ci = T)
 plot(b6.berry.southafrica.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 plot(sp140.berry.southafrica.tb.roc, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
 plot(irg1.berry.southafrica.tb.roc,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
 plot(inos.berry.southafrica.tb.roc, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
+
+#roc.test using Boostrap test
+roc.test(sp140.berry.southafrica.tb.roc, b6.berry.southafrica.roc) #p-value = 0.01969
+roc.test(irg1.berry.southafrica.tb.roc, b6.berry.southafrica.roc) #p-value = 0.07203
+roc.test(inos.berry.southafrica.tb.roc, b6.berry.southafrica.roc) #p-value = 0.02827
 
 library(sjmisc)
 counts <- rotate_df(berry.southafrica.norm)
@@ -312,7 +322,7 @@ counts$Class <- ifelse(grepl(paste(berry.southafrica.tb, collapse = "|"), berry.
 IL1RN.score.berrySA <- counts %>% dplyr::select(c("sample","Class","IL1RN"))
 IL1RN.score.berrySA$status <- ifelse(grepl(paste(berry.southafrica.tb, collapse = "|"), berry.southafrica.sig$sample_id), "TB", "LTBI")
 IL1RN.score.berrySA$IL1RN <- as.numeric(IL1RN.score.berrySA$IL1RN)
-berrySA.IL1RN.roc <- roc(IL1RN.score.berrySA$status, IL1RN.score.berrySA$IL1RN)
+berrySA.IL1RN.roc <- roc(IL1RN.score.berrySA$status, IL1RN.score.berrySA$IL1RN, ci = T)
 plot(berrySA.IL1RN.roc, print.auc = TRUE, col = "red", print.auc.y =0.47)
 
 #Look at data comparing Lung TB, adenocarcinoma, and sarcoidosis.
