@@ -317,22 +317,10 @@ cat("Nos2 Final model gene count:", length(model_genes_nos2), "\n")
 print(model_genes_nos2)
 
 # Plot comparative ROC curves
-plot(roc_hacksig_b6, col = "darkblue", main = "Independent Test Dataset - ROC Curves")
-plot(roc_ml_b6, col = "red", add = TRUE)
-legend("bottomright",
-       legend = c(sprintf("B6 hacksig (AUC = %.3f)", auc_hacksig_b6),
-                  sprintf("B6 caret ML (AUC = %.3f)", auc_ml_b6)),
-       col = c("darkblue", "red"), lwd = 2)
-
-plot(roc_hacksig_b6, print.auc = TRUE, col = "red", print.auc.y =0.47)
-plot(roc_hacksig_sp140, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
-plot(roc_hacksig_irg1,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
-plot(roc_hacksig_nos2, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
-
-plot(roc_ml_b6, print.auc = TRUE, col = "red", print.auc.y =0.47)
-plot(roc_ml_sp140, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
-plot(roc_ml_irg1,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
-plot(roc_ml_nos2, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
+pROC::plot.roc(roc_ml_b6, print.auc = TRUE, col = "red", print.auc.y =0.47)
+pROC::plot.roc(roc_ml_sp140, add=TRUE, print.auc = TRUE, col = "blue",  print.auc.y =0.4)
+pROC::plot.roc(roc_ml_irg1,add = TRUE, print.auc = TRUE, col = "chartreuse", print.auc.y =0.33)
+pROC::plot.roc(roc_ml_nos2, add=TRUE, print.auc = TRUE, col = "cadetblue2",  print.auc.y =0.27)
 
 #roc.test using Boostrap test
 roc.test(roc_ml_sp140, roc_ml_b6) #p-value = 3.061e-06
